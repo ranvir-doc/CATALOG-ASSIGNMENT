@@ -1,0 +1,120 @@
+const input = {
+    "keys": {
+        "n": 9,
+        "k": 6
+    },
+    "1": {
+        "base": "10",
+        "value": "28735619723837"
+    },
+    "2": {
+        "base": "16",
+        "value": "1A228867F0CA"
+    },
+    "3": {
+        "base": "12",
+        "value": "32811A4AA0B7B"
+    },
+    "4": {
+        "base": "11",
+        "value": "917978721331A"
+    },
+    "5": {
+        "base": "16",
+        "value": "1A22886782E1"
+    },
+    "6": {
+        "base": "10",
+        "value": "28735619654702"
+    },
+    "7": {
+        "base": "14",
+        "value": "71AB5070CC4B"
+    },
+    "8": {
+        "base": "9",
+        "value": "122662581541670"
+    },
+    "9": {
+        "base": "8",
+        "value": "642121030037605"
+    }
+};
+
+// Convert input values from different bases to decimal
+function parseInput(input) {
+    const { n } = input.keys;
+    let points = [];
+
+    for (let i = 1; i <= n; i++) {
+        if (input[i]) {
+            const base = parseInt(input[i].base, 10);
+            const value = parseInt(input[i].value, base);
+            points.push([i, value]); // Use i as x-coordinate, value as y-coordinate
+        }
+    }
+
+    return points;
+}
+
+// Compute the Lagrange interpolation polynomial value at x = 0
+function lagrangeInterpolation(points, x) {
+    let result = 0;
+
+    for (let i = 0; i < points.length; i++) {
+        let xi = points[i][0];
+        let yi = points[i][1];
+        let li = 1;
+
+        for (let j = 0; j < points.length; j++) {
+            if (i !== j) {
+                let xj = points[j][0];
+                li *= (x - xj) / (xi - xj);
+            }
+        }
+
+        result += yi * li;
+    }
+
+    return result;
+}
+
+// Find incorrect roots by checking if each root leads to inconsistency
+function findIncorrectRoots(points, k) {
+    const n = points.length;
+    let incorrectRoots = [];
+
+    for (let i = 0; i < n; i++) {
+        let subset = points.slice();
+        subset.splice(i, 1); // Remove one point
+        
+        if (subset.length >= k - 1) {
+            // Calculate the constant term of the polynomial using the remaining points
+            const polynomialAtZero = lagrangeInterpolation(subset, 0);
+            
+            // Check if the removed point (i) does not fit the polynomial formed by the remaining points
+            let [x, y] = points[i];
+            let isIncorrect = y !== lagrangeInterpolation(subset, x);
+
+            if (isIncorrect) {
+                incorrectRoots.push(points[i][0]);
+            }
+        }
+    }
+
+    return incorrectRoots;
+}
+
+// Main function to find incorrect roots
+function identifyIncorrectRoots(input) {
+    const points = parseInput(input);
+    const k = input.keys.k;
+
+    // Find incorrect roots
+    const incorrectRoots = findIncorrectRoots(points, k);
+    
+    return incorrectRoots;
+}
+
+const incorrectRoots = identifyIncorrectRoots(input);
+console.log(`Incorrect roots are: ${incorrectRoots.join(', ')}`);
